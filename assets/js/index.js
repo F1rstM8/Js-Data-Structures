@@ -158,6 +158,7 @@ for (const item of collection) {
 console.log("\n--- Spread operator ---");
 const arrayFromCollection = [...collection];
 console.log(arrayFromCollection);
+console.log(`-exercice4--`);
 class BracketValidator {
   #openBrackets;
   #bracketPairs;
