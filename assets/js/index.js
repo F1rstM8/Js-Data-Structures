@@ -1,6 +1,10 @@
-console.log("--- ЗАВДАННЯ 1: LinkedList (з Error Handling) ---");
+console.log("--- Exercice 1: LinkedList (Clean & Professional) ---");
+
 class Node {
   constructor(value) {
+    if (value === undefined || value === null) {
+      throw new TypeError("Value cannot be undefined or null.");
+    }
     this.value = value;
     this.next = null;
   }
@@ -8,9 +12,13 @@ class Node {
 class LinkedList {
   #head;
   #length;
+
   constructor() {
     this.#head = null;
     this.#length = 0;
+  }
+  get length() {
+    return this.#length;
   }
   append(data) {
     const newNode = new Node(data);
@@ -27,91 +35,96 @@ class LinkedList {
     this.#length++;
   }
   /**
-   * Метод 1: Видалення першого знайденого елемента за значенням
-   * @param {any} data - значення для пошуку
+   * Видалення першого знайденого елемента.
+   * @returns {boolean} true - успішно видалено, false - не знайдено
    */
   deleteItem(data) {
     if (!this.#head) {
-      console.warn("Список порожній, нічого видаляти.");
-      return;
+      return false;
     }
     if (this.#head.value === data) {
       this.#head = this.#head.next;
       this.#length--;
-      console.log(`Елемент ${data} видалено (це була голова).`);
-      return;
+      return true;
     }
     let current = this.#head;
     while (current.next) {
       if (current.next.value === data) {
         current.next = current.next.next;
         this.#length--;
-        console.log(`Елемент ${data} видалено.`);
-        return;
+        return true;
       }
       current = current.next;
     }
-    console.warn(`Елемент ${data} не знайдено.`);
+
+    return false;
   }
-  /**
-   * Метод 2: Вставка після N-го елемента
-   * @param {any} data - нові дані
-   * @param {number} position - індекс, після якого вставляємо
-   */
+
   addNthElement(data, position) {
     if (!Number.isInteger(position)) {
-      throw new TypeError("Позиція має бути цілим числом.");
+      throw new TypeError("Position must be an integer.");
     }
     if (position < 0 || position >= this.#length) {
       throw new RangeError(
-        `Помилка: Індекс ${position} виходить за межі списку (довжина: ${this.#length}).`,
+        `Index ${position} is out of bounds (length: ${this.#length}).`,
       );
     }
 
     const newNode = new Node(data);
     let current = this.#head;
     let count = 0;
+
     while (count < position) {
       current = current.next;
       count++;
     }
+
     newNode.next = current.next;
     current.next = newNode;
-
     this.#length++;
-    console.log(`Вставлено "${data}" після індексу ${position}.`);
   }
-  print() {
+  toArray() {
     const result = [];
     let current = this.#head;
     while (current) {
       result.push(current.value);
       current = current.next;
     }
-    console.log("LinkedList:", result.join(" -> "));
+    return result;
   }
 }
-const list = new LinkedList();
-list.append("A");
-list.append("B");
-list.append("C");
-list.print();
-console.log("--- Тест: addNthElement ---");
+
+// --- ТЕСТ LinkedList ---
 try {
+  const list = new LinkedList();
+  list.append("A");
+  list.append("B");
+  list.append("C");
+
+  console.log("Initial List:", list.toArray());
+
+  // Тестуємо видалення
+  const isDeleted = list.deleteItem("A");
+  if (isDeleted) {
+    console.log("Succesfully deleted  'A'");
+  } else {
+    console.error("Сouldn't find'A'");
+  }
+
+  // Тестуємо невдале видалення
+  const isDeletedFake = list.deleteItem("Z");
+  if (!isDeletedFake) {
+    console.log("Element 'Z' not found .");
+  }
+
   list.addNthElement("X", 1);
-  list.print();
-  list.addNthElement("Z", 100);
+  console.log("After insert:", list.toArray());
 } catch (e) {
-  console.error(`!!! СПІЙМАНО ПОМИЛКУ (${e.name}): ${e.message}`);
+  console.error(`ERROR: ${e.message}`);
 }
-console.log("--- Тест: deleteItem ---");
-list.deleteItem("A");
-list.print();
 
-list.deleteItem("C");
-list.print();
+console.log("\n--- Exercice 2 & 3: NumberedCollection ---");
 
-console.log(`--Exercice2--`);
 class NumberedCollection {
   #count = 0;
 
@@ -120,29 +133,13 @@ class NumberedCollection {
   }
 
   add(value) {
+    if (value === undefined || value === null) {
+      throw new TypeError("Collection cannot accept null/undefined.");
+    }
     this.#count++;
     this[`*${this.#count}*`] = value;
   }
-}
-const myCollection = new NumberedCollection(
-  "first value",
-  "second value",
-  "third value",
-);
-console.log(myCollection);
 
-console.log(`--Exercice3`);
-class NumberedCollection {
-  #count = 0;
-
-  constructor(...args) {
-    args.forEach((item) => this.add(item));
-  }
-
-  add(value) {
-    this.#count++;
-    this[`*${this.#count}*`] = value;
-  }
   *[Symbol.iterator]() {
     for (let i = 1; i <= this.#count; i++) {
       const key = `*${i}*`;
@@ -150,45 +147,34 @@ class NumberedCollection {
     }
   }
 }
-const collection = new NumberedCollection("First", "Second", "Third");
-console.log("--- Цикл for...of ---");
+
+// --- ТЕСТ Collection ---
+const collection = new NumberedCollection("First", "Second");
+console.log("Iterating:");
 for (const item of collection) {
   console.log(item);
 }
-console.log("\n--- Spread operator ---");
-const arrayFromCollection = [...collection];
-console.log(arrayFromCollection);
-console.log(`-exercice4--`);
+
+console.log("\n--- Exercice 4: BracketValidator (Clean) ---");
+
 class BracketValidator {
   #openBrackets;
   #bracketPairs;
 
-  /**
-   * @param {string[]} configPairs - масив пар дужок, наприклад ['()', '[]']
-   */
   constructor(configPairs = ["()", "[]", "{}", "<>"]) {
     this.#openBrackets = new Set();
     this.#bracketPairs = new Map();
 
     for (const pair of configPairs) {
       if (typeof pair !== "string" || pair.length !== 2) {
-        throw new Error(
-          `Некоректна пара дужок: "${pair}". Має бути рядок з 2 символів.`,
-        );
+        throw new Error(`Invalid pair configuration: "${pair}"`);
       }
-
       const [open, close] = pair;
-
       this.#openBrackets.add(open);
       this.#bracketPairs.set(close, open);
     }
   }
 
-  /**
-   * Перевіряє валідність послідовності дужок
-   * @param {string} sequence
-   * @returns {boolean}
-   */
   checkSequence(sequence) {
     if (typeof sequence !== "string") return false;
 
@@ -201,6 +187,8 @@ class BracketValidator {
       }
 
       if (this.#bracketPairs.has(char)) {
+        if (stack.length === 0) return false;
+
         const lastOpen = stack.pop();
         const expectedOpen = this.#bracketPairs.get(char);
 
@@ -214,26 +202,6 @@ class BracketValidator {
   }
 }
 
-const validator = new BracketValidator(["()", "[]", "{}", "<>"]);
-
-console.log("1. Стандартні перевірки:");
-console.log(validator.checkSequence("()(([]))")); // true
-console.log(validator.checkSequence("{][)")); // false
-console.log(validator.checkSequence("((()))")); // true
-console.log(validator.checkSequence("<{ [ ] }>")); // true
-console.log(validator.checkSequence("( [ ) ]")); // false (перетин дужок)
-console.log(validator.checkSequence("(")); // false (не закрита)
-
-console.log("\n2. Налаштовуваний варіант (тільки круглі дужки):");
-const simpleValidator = new BracketValidator(["()"]);
-console.log(simpleValidator.checkSequence("[]")); // true (бо [] ігноруються, це просто текст)
-console.log(simpleValidator.checkSequence("(( ))")); // true
-
-console.log(
-  "\n3. Екзотичні дужки (наприклад, для математики або власних пар):",
-);
-
-const customValidator = new BracketValidator(["AB", "xy"]);
-// Тут 'A' відкриває, 'B' закриває. 'x' відкриває, 'y' закриває.
-console.log(customValidator.checkSequence("AxBy")); // true
-console.log(customValidator.checkSequence("ABBA")); // false
+const validator = new BracketValidator();
+console.log("Check '()':", validator.checkSequence("()")); // true
+console.log("Check '{]':", validator.checkSequence("{]")); // false
